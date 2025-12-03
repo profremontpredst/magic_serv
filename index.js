@@ -60,14 +60,17 @@ ${session.history.join("\n")}
 - dayCard
         `;
 
-        // ******** НОВЫЙ СИНТАКСИС RESPONSES API ********
         const response = await client.responses.create({
             model: "gpt-4.1-mini",
             input: prompt,
-            text: { format: "json_object" }  // 👈 ВОТ ЭТО ПРАВИЛЬНО
+            text: {
+                format: {
+                    type: "json_object"
+                }
+            }
         });
 
-        const data = JSON.parse(response.output_text); // 👈 JSON парс
+        const data = JSON.parse(response.output_text);
 
         session.calculated = data;
         session.history.push(JSON.stringify(data).slice(0, 500));
@@ -111,7 +114,11 @@ app.post("/compatibility", async (req, res) => {
         const resp = await client.responses.create({
             model: "gpt-4.1-mini",
             input: prompt,
-            text: { format: "json_object" } // 👈 тоже самое
+            text: {
+                format: {
+                    type: "json_object"
+                }
+            }
         });
 
         const data = JSON.parse(resp.output_text);
@@ -130,6 +137,6 @@ app.get("/", (req, res) => {
     res.send("Magic Serv API up");
 });
 
-// ====== ФИКС ДЛЯ RENDER (ОБЯЗАТЕЛЕН!) ======
+// ====== ФИКС ДЛЯ RENDER ======
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running on", PORT));

@@ -62,14 +62,15 @@ ${session.history.join("\n")}
 - dayCard
         `;
 
+        // 👇 Новая версия SDK — так вызывается JSON
         const response = await client.responses.create({
             model: "gpt-4.1-mini",
             input: prompt,
-            format: "json"
+            response_format: { type: "json_object" }
         });
 
-        // ВАЖНО — ПРАВИЛЬНОЕ ЧТЕНИЕ JSON
-        const data = response.output[0].content[0].json;
+        // 👇 GPT теперь отдаёт JSON в текстовом виде
+        const data = JSON.parse(response.output_text);
 
         // сохраняем в память
         session.calculated = data;
@@ -78,7 +79,7 @@ ${session.history.join("\n")}
         res.json(data);
 
     } catch (err) {
-        console.error(err);
+        console.error("ANALYZE ERROR:", err);
         res.status(500).json({ error: "Ошибка обработки", details: String(err) });
     }
 });
@@ -114,26 +115,26 @@ app.post("/compatibility", async (req, res) => {
         const resp = await client.responses.create({
             model: "gpt-4.1-mini",
             input: prompt,
-            format: "json"
+            response_format: { type: "json_object" }
         });
 
-        // ТАК ЖЕ ПРАВИЛЬНОЕ ЧТЕНИЕ JSON
-        const data = resp.output[0].content[0].json;
+        const data = JSON.parse(resp.output_text);
 
         session.history.push("compat:" + JSON.stringify(data).slice(0, 500));
 
         res.json(data);
 
     } catch (err) {
-        console.error(err);
+        console.error("COMPAT ERROR:", err);
         res.status(500).json({ error: "Ошибка", details: String(err) });
     }
 });
 
+// ====== ПИНГ ======
 app.get("/", (req, res) => {
     res.send("Magic Serv API up");
 });
 
-// ====== ФИКС ДЛЯ RENDER ======
+// ====== ФИКС ДЛЯ RENDER (ОБЯЗАТЕЛЕН!) ======
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running on", PORT));

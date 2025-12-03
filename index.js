@@ -32,11 +32,9 @@ app.post("/analyze", async (req, res) => {
         const { userId, birthDate, birthTime } = req.body;
         const session = getSession(userId);
 
-        // сохраняем входные данные в сессию
         if (birthDate) session.birthDate = birthDate;
         if (birthTime) session.birthTime = birthTime;
 
-        // промт для GPT
         const prompt = `
 Ты — астролог/нумеролог, делаешь краткие и уверенные разборы.
 
@@ -62,17 +60,15 @@ ${session.history.join("\n")}
 - dayCard
         `;
 
-        // 👇 Новая версия SDK — так вызывается JSON
+        // ******** НОВЫЙ СИНТАКСИС RESPONSES API ********
         const response = await client.responses.create({
             model: "gpt-4.1-mini",
             input: prompt,
-            response_format: { type: "json_object" }
+            text: { format: "json_object" }  // 👈 ВОТ ЭТО ПРАВИЛЬНО
         });
 
-        // 👇 GPT теперь отдаёт JSON в текстовом виде
-        const data = JSON.parse(response.output_text);
+        const data = JSON.parse(response.output_text); // 👈 JSON парс
 
-        // сохраняем в память
         session.calculated = data;
         session.history.push(JSON.stringify(data).slice(0, 500));
 
@@ -115,7 +111,7 @@ app.post("/compatibility", async (req, res) => {
         const resp = await client.responses.create({
             model: "gpt-4.1-mini",
             input: prompt,
-            response_format: { type: "json_object" }
+            text: { format: "json_object" } // 👈 тоже самое
         });
 
         const data = JSON.parse(resp.output_text);
@@ -130,7 +126,6 @@ app.post("/compatibility", async (req, res) => {
     }
 });
 
-// ====== ПИНГ ======
 app.get("/", (req, res) => {
     res.send("Magic Serv API up");
 });

@@ -68,7 +68,8 @@ ${session.history.join("\n")}
             format: "json"
         });
 
-        const data = response.output[0];
+        // ВАЖНО — ПРАВИЛЬНОЕ ЧТЕНИЕ JSON
+        const data = response.output[0].content[0].json;
 
         // сохраняем в память
         session.calculated = data;
@@ -78,7 +79,7 @@ ${session.history.join("\n")}
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Ошибка обработки" });
+        res.status(500).json({ error: "Ошибка обработки", details: String(err) });
     }
 });
 
@@ -116,14 +117,16 @@ app.post("/compatibility", async (req, res) => {
             format: "json"
         });
 
-        const data = resp.output[0];
+        // ТАК ЖЕ ПРАВИЛЬНОЕ ЧТЕНИЕ JSON
+        const data = resp.output[0].content[0].json;
+
         session.history.push("compat:" + JSON.stringify(data).slice(0, 500));
 
         res.json(data);
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Ошибка" });
+        res.status(500).json({ error: "Ошибка", details: String(err) });
     }
 });
 
@@ -131,4 +134,6 @@ app.get("/", (req, res) => {
     res.send("Magic Serv API up");
 });
 
-app.listen(3000, () => console.log("Server running on 3000"));
+// ====== ФИКС ДЛЯ RENDER ======
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on", PORT));
